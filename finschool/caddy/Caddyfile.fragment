@@ -1,0 +1,19 @@
+# Include one block per partner (and HQ). TLS via Let's Encrypt files or Caddy auto.
+# Example HQ:
+#
+# crm.finschool.pro {
+#   tls /etc/letsencrypt/live/crm.finschool.pro/fullchain.pem \
+#       /etc/letsencrypt/live/crm.finschool.pro/privkey.pem
+#   @root path /
+#   handle @root {
+#     @nolocale not header Cookie *tw_locale*
+#     rewrite @nolocale /?locale=ru-RU
+#     header Set-Cookie "tw_locale=ru-RU; Path=/; Max-Age=31536000; SameSite=Lax"
+#   }
+#   reverse_proxy 127.0.0.1:3000
+# }
+#
+# crm-acme.finschool.pro {
+#   reverse_proxy 127.0.0.1:3101
+#   # optional: import brand CSS header injection per partner
+# }

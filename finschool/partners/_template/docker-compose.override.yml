@@ -1,0 +1,2 @@
+# Optional per-partner overrides (ports already driven by .env).
+services: {}

@@ -1,0 +1,116 @@
+# Base stack for one FinSchool Twenty instance (partner or HQ).
+# Partner-specific ports / SERVER_URL live in partners/<slug>/.env + override.
+name: twenty
+
+services:
+  server:
+    image: ${FINSCHOOL_TWENTY_IMAGE:-finschool/twenty:local}
+    volumes:
+      - server-local-data:/app/packages/twenty-server/.local-storage
+    ports:
+      - "${HOST_BIND:-127.0.0.1}:${HOST_PORT:-3000}:3000"
+    env_file:
+      - .env
+    environment:
+      NODE_PORT: 3000
+      PG_DATABASE_URL: postgres://${PG_DATABASE_USER:-postgres}:${PG_DATABASE_PASSWORD:-postgres}@${PG_DATABASE_HOST:-db}:${PG_DATABASE_PORT:-5432}/${PG_DATABASE_NAME:-default}
+      SERVER_URL: ${SERVER_URL}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      REDIS_CACHE_PREFIX: ${REDIS_CACHE_PREFIX:-}
+      DISABLE_DB_MIGRATIONS: ${DISABLE_DB_MIGRATIONS:-false}
+      DISABLE_CRON_JOBS_REGISTRATION: ${DISABLE_CRON_JOBS_REGISTRATION:-false}
+      STORAGE_TYPE: ${STORAGE_TYPE:-local}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      FALLBACK_ENCRYPTION_KEY: ${FALLBACK_ENCRYPTION_KEY:-}
+      APP_SECRET: ${APP_SECRET:-}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: curl --fail http://localhost:3000/healthz
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: always
+
+  worker:
+    image: ${FINSCHOOL_TWENTY_IMAGE:-finschool/twenty:local}
+    volumes:
+      - server-local-data:/app/packages/twenty-server/.local-storage
+    command: ["yarn", "worker:prod"]
+    env_file:
+      - .env
+    environment:
+      PG_DATABASE_URL: postgres://${PG_DATABASE_USER:-postgres}:${PG_DATABASE_PASSWORD:-postgres}@${PG_DATABASE_HOST:-db}:${PG_DATABASE_PORT:-5432}/${PG_DATABASE_NAME:-default}
+      SERVER_URL: ${SERVER_URL}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      REDIS_CACHE_PREFIX: ${REDIS_CACHE_PREFIX:-}
+      DISABLE_DB_MIGRATIONS: "true"
+      DISABLE_CRON_JOBS_REGISTRATION: "true"
+      STORAGE_TYPE: ${STORAGE_TYPE:-local}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      FALLBACK_ENCRYPTION_KEY: ${FALLBACK_ENCRYPTION_KEY:-}
+      APP_SECRET: ${APP_SECRET:-}
+    depends_on:
+      db:
+        condition: service_healthy
+      server:
+        condition: service_healthy
+    restart: always
+
+  db:
+    image: postgres:16
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${PG_DATABASE_NAME:-default}
+      POSTGRES_PASSWORD: ${PG_DATABASE_PASSWORD:-postgres}
+      POSTGRES_USER: ${PG_DATABASE_USER:-postgres}
+    healthcheck:
+      test: pg_isready -U ${PG_DATABASE_USER:-postgres} -h localhost -d postgres
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: always
+
+  redis:
+    image: redis
+    restart: always
+    command: ["--maxmemory-policy", "noeviction"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  sso-bridge:
+    image: ${FINSCHOOL_TWENTY_IMAGE:-finschool/twenty:local}
+    working_dir: /finschool/sso-bridge
+    entrypoint: ["node", "server.js"]
+    env_file:
+      - .env
+    environment:
+      SSO_BRIDGE_LISTEN: "0.0.0.0"
+      SSO_BRIDGE_PORT: "3099"
+      CRM_ORIGIN: ${SERVER_URL}
+      TWENTY_METADATA_URL: "http://server:3000/metadata"
+      NODE_PATH: /app/node_modules
+      PG_DATABASE_HOST: db
+      PG_DATABASE_PORT: 5432
+      PG_DATABASE_USER: ${PG_DATABASE_USER:-postgres}
+      PG_DATABASE_PASSWORD: ${PG_DATABASE_PASSWORD:-postgres}
+      PG_DATABASE_NAME: ${PG_DATABASE_NAME:-default}
+    ports:
+      - "${HOST_BIND:-127.0.0.1}:${SSO_HOST_PORT:-3099}:3099"
+    depends_on:
+      server:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    restart: always
+
+volumes:
+  db-data:
+  server-local-data:

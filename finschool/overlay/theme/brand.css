@@ -1,0 +1,5 @@
+/* FinSchool brand overlay — injected via Caddy or copied into front build later.
+   Keep selectors conservative until forked front owns the theme. */
+:root {
+  --finschool-accent: #0b6e4f;
+}

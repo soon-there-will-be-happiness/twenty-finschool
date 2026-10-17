@@ -1,0 +1,8 @@
+{
+  "messaging": false,
+  "calendar": false,
+  "ai": false,
+  "workflow": true,
+  "settingsLab": false,
+  "comment": "Stub — wire into twenty-front before relying on these values"
+}
