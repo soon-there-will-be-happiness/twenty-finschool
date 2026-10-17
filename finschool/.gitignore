@@ -1,0 +1,4 @@
+partners/*/.env
+partners/*/.env.local
+!partners/_template/.env.example
+!partners/hq/.env.example
