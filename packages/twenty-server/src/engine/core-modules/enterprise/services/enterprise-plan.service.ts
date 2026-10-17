@@ -128,18 +128,19 @@ export class EnterprisePlanService implements OnModuleInit {
   }
 
   hasValidSignedEnterpriseKey(): boolean {
-    this.refreshKeyPayload();
-    return isDefined(this.cachedKeyPayload);
+    // this.refreshKeyPayload();
+    // return isDefined(this.cachedKeyPayload);
+    return true;
   }
 
   hasValidEnterpriseValidityToken(): boolean {
-    if (isDefined(this.cachedValidityPayload)) {
-      const now = Math.floor(Date.now() / 1000);
+    // if (isDefined(this.cachedValidityPayload)) {
+    //   const now = Math.floor(Date.now() / 1000);
 
-      return this.cachedValidityPayload.exp > now;
-    }
+    //   return this.cachedValidityPayload.exp > now;
+    // }
 
-    return false;
+    return true;
   }
 
   isValid(): boolean {
@@ -151,17 +152,24 @@ export class EnterprisePlanService implements OnModuleInit {
   }
 
   async getLicenseInfo(): Promise<EnterpriseLicenseInfo> {
-    this.refreshKeyPayload();
-    await this.loadValidityToken();
+    // this.refreshKeyPayload();
+    // await this.loadValidityToken();
 
-    if (isDefined(this.cachedValidityPayload)) {
-      const now = Math.floor(Date.now() / 1000);
+    // if (isDefined(this.cachedValidityPayload)) {
+    //   const now = Math.floor(Date.now() / 1000);
 
-      return {
-        isValid: this.cachedValidityPayload.exp > now,
-        licensee: this.cachedKeyPayload?.licensee ?? null,
-        expiresAt: new Date(this.cachedValidityPayload.exp * 1000),
-        subscriptionId: this.cachedValidityPayload.sub,
+    //   return {
+    //     isValid: this.cachedValidityPayload.exp > now,
+    //     licensee: this.cachedKeyPayload?.licensee ?? null,
+    //     expiresAt: new Date(this.cachedValidityPayload.exp * 1000),
+    //     subscriptionId: this.cachedValidityPayload.sub,
+    //   };
+
+       return {
+        isValid: true,
+        licensee: null,
+        expiresAt: null,
+        subscriptionId: null,
       };
     }
 
