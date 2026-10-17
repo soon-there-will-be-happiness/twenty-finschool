@@ -163,7 +163,7 @@ export class EnterprisePlanService implements OnModuleInit {
     //     licensee: this.cachedKeyPayload?.licensee ?? null,
     //     expiresAt: new Date(this.cachedValidityPayload.exp * 1000),
     //     subscriptionId: this.cachedValidityPayload.sub,
-    //   };
+    //   };п
 
        return {
         isValid: true,
